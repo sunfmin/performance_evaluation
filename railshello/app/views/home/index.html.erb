@@ -1,0 +1,6 @@
+<h1>Home#index</h1>
+
+<% User.limit(100).each do |u| %>
+<h3><%= u.name %></h3>
+<p><%= u.bio %></p>
+<% end %>

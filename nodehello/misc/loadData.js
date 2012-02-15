@@ -1,0 +1,6 @@
+for(var i=0; i<10000; i++) {
+    db.users.save({
+        name: "Felix " + i,
+        bio: "While the full impact of redistricting is beginning to clarify in California, to the benefit of Democrats, the national battle over the process — done every decade in all the states, based on the most recent census — continues to churn. There are several court battles over it, particularly in Texas, which at 32 members has the next biggest delegation and where elections have been put on hold as the courts rule on various conflicting maps.\nThe main focus of campaign strategists has not been whether the final national map will benefit one party over another — there has been little doubt that Republicans, by virtue of having gained control of many statehouses in 2010, would have the edge — but rather, how much of an advantage the Republicans would have.\n The new political landscape in California, at least, is evidence of the far-reaching implications of the state adopting a nonpartisan redistricting process. After years of allowing state lawmakers to determine Congressional district lines, for 2012, an independent commission, created by voters in a referendum, drew districts without an eye to protecting incumbents. The commission was not even supposed to take into account where it was that incumbent lawmakers lived."
+    })
+}
