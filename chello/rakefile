@@ -1,0 +1,15 @@
+include FileUtils
+
+desc "build all"
+task :default do
+  files = "server.c users.c mongo-c-driver/src/*.c"
+  sh "gcc #{files} -o server -O3 -Imongo-c-driver/src -lmicrohttpd --std=c99"
+end
+
+desc "install dependencies"
+task :install do
+  sh "brew install libmicrohttpd"
+  sh "git clone https://github.com/mongodb/mongo-c-driver"
+  cd "mongo-c-driver"
+  sh "git checkout v0.4"
+end
