@@ -1,20 +1,13 @@
+#include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 #include "users.h"
+#include "buffer.h"
 #include <microhttpd.h>
 
-#define append(s, l) \
-  if(len + l + 1 > cap) {\
-    cap = cap * 2 + l;\
-    buf = realloc(buf, cap);\
-  }\
-  strcpy(buf + len, s);\
-  len += l;
-
-static void render_index(struct MHD_Connection* http_conn, User* users, int users_len) {
+Buffer render_index(User* users, int users_len) {
   static const char* init =
     "<!DOCTYPE html><html><head><title>C Hello</title></head>"
     "<body><h1>Home#index</h1>";
@@ -22,11 +15,9 @@ static void render_index(struct MHD_Connection* http_conn, User* users, int user
     "</body></html>";
 
   int i;
-  size_t len = 0;
-  size_t cap = 300;
-  char* buf = (char*)malloc(cap * sizeof(char));
-  struct MHD_Response* resp;
+  Buffer buf = buffer_new(300);
 
+# define append(s, l) buffer_append(&buf, s, l)
   append(init, strlen(init));
   for(i = 0; i < users_len; i++) {
     append("<h3>", 4);
@@ -41,11 +32,9 @@ static void render_index(struct MHD_Connection* http_conn, User* users, int user
     append("</p>", 4);
   }
   append(finl, strlen(finl));
+# undef append
 
-  resp = MHD_create_response_from_data(len, buf, MHD_NO, MHD_NO);
-  MHD_queue_response(http_conn, MHD_HTTP_OK, resp);
-  MHD_destroy_response(resp);
-  free(buf);
+  return buf;
 }
 
 static int serve(void *cls, struct MHD_Connection* http_conn,
@@ -63,8 +52,14 @@ static int serve(void *cls, struct MHD_Connection* http_conn,
   if (strcmp(method, "GET") == 0) {
     User users[100];
     int len = users_search(users, 100);
-    render_index(http_conn, users, len);
+    Buffer index = render_index(users, len);
+    struct MHD_Response* resp;
+
     users_free(users, len);
+    resp = MHD_create_response_from_buffer(index.len, index.str, MHD_RESPMEM_MUST_FREE);
+    MHD_queue_response(http_conn, MHD_HTTP_OK, resp);
+    MHD_destroy_response(resp);
+
     return MHD_YES;
   } else {
     return MHD_NO;
