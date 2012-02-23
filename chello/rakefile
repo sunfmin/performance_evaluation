@@ -2,7 +2,7 @@ include FileUtils
 
 desc "build all"
 task :default do
-  files = "server.c users.c mongo-c-driver/src/*.c"
+  files = "db.c users.c server.c mongo-c-driver/src/*.c"
   sh "gcc #{files} -o server -O3 -Imongo-c-driver/src -lmicrohttpd --std=c99"
 end
 

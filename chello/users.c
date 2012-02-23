@@ -17,11 +17,11 @@ static const char* get_field_value(bson_iterator* iterator, mongo_cursor* cursor
   }
 }
 
-int users_search(mongo* conn, User* users, int limit) {
+int users_search(User* users, int limit) {
   int pos = 0;
   mongo_cursor cursor[1];
   bson_iterator iterator[1];
-  mongo_cursor_init(cursor, conn, "ruby-mongo-console.users");
+  db_init_cursor(cursor, "users");
   // mongo_cursor_set_query
   mongo_cursor_set_limit(cursor, limit);
 

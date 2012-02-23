@@ -1,4 +1,5 @@
-#include <mongo.h>
+#pragma once
+#include "db.h"
 
 typedef struct {
   char* name;
@@ -8,6 +9,6 @@ typedef struct {
 } User;
 
 // return len
-int users_search(mongo* conn, User* users, int count);
+int users_search(User* users, int count);
 
 void users_free(User* users, int count);

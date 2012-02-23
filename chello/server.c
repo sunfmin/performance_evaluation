@@ -6,8 +6,6 @@
 #include "users.h"
 #include <microhttpd.h>
 
-static mongo conn[1];
-
 #define append(s, l) \
   if(len + l + 1 > cap) {\
     cap = cap * 2 + l;\
@@ -20,8 +18,8 @@ static void render_index(struct MHD_Connection* http_conn, User* users, int user
   static const char* init =
     "<!DOCTYPE html><html><head><title>C Hello</title></head>"
     "<body><h1>Home#index</h1>";
-  static char* finl =
-    "</body></html>\r\n";
+  static const char* finl =
+    "</body></html>";
 
   int i;
   size_t len = 0;
@@ -64,7 +62,7 @@ static int serve(void *cls, struct MHD_Connection* http_conn,
 
   if (strcmp(method, "GET") == 0) {
     User users[100];
-    int len = users_search(conn, users, 100);
+    int len = users_search(users, 100);
     render_index(http_conn, users, len);
     users_free(users, len);
     return MHD_YES;
@@ -74,12 +72,11 @@ static int serve(void *cls, struct MHD_Connection* http_conn,
 }
 
 int main(int argc, char const *argv[]) {
-  struct MHD_Daemon* d;
   int port;
-  long long status;
+  struct MHD_Daemon* d;
 
-  if (argc != 2) {
-    printf("usage: ./server <port>\n");
+  if (argc != 3) {
+    printf("usage: ./server <port> <db_name>\n");
     return 1;
   } else {
     port = atoi(argv[1]);
@@ -89,11 +86,7 @@ int main(int argc, char const *argv[]) {
     }
   }
 
-  status = mongo_connect(conn, "127.0.0.1", 27017);
-  if(status != MONGO_OK) {
-    printf("failed to connect mongo\n");
-    exit(-1);
-  }
+  db_establish_connection(argv[2]);
 
   // install int actions
   // action.sa_handler = finalize;
@@ -101,13 +94,13 @@ int main(int argc, char const *argv[]) {
   // action.sa_flags = 0;
   // sigaction (SIGINT, &action, NULL);
 
-  d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, 8080, NULL, NULL,
+  d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, port, NULL, NULL,
                        &serve, NULL, MHD_OPTION_END);
   if (d != NULL) {
     pause();
     MHD_stop_daemon(d);
   }
 
-  mongo_destroy(conn);
+  db_close_connection();
   return 0;
 }
