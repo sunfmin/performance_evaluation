@@ -1,0 +1,4 @@
+{
+  "server": "your.server.name:8080",
+  "database": "localhost/perfcompare/log"
+}
