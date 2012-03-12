@@ -1,4 +1,4 @@
-Building a tracking server like google analytics: Go or Ruby? Micro benchmarks doesn't answer the real world questions. What we choose depends on not only the language, but also the packages we may use.
+Building a tracking server like google analytics: Go or Ruby? Micro benchmarks doesn't answer real world questions. What we choose depends on not only the language, but also the packages we may use.
 
 Here's hello-world-tracking-server code for each language using proper packages.
 
@@ -45,10 +45,10 @@ httperf --server=your.server.name --port=8080 --num-calls=100 --num-conns=100
 
 On my machine:
 
-Go: ~10000 req/s, whether use go routine doesn't improve
+Go: ~10000 req/s, whether use go routine doesn't diff much
 
 Ruby: ~6000 req/s
 
 Bottleneck lies in IO, both Memory / Cpu usage are neglectable, so no need to worry go's stop-the-world GC problem.
 
-For deployment, ruby still needs a front-end to make use of all the cores. But for either language, network IO is the real problem you have to handle before using the second core.
+For deployment, ruby still needs a front-end-dispatcher to make use of all the cores. But for either language, network IO is the real problem you have to handle before using the second core.
