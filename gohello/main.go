@@ -1,9 +1,10 @@
 package main
 
 import (
-	"net/http"
-	"launchpad.net/mgo"
-	"text/template"
+    "net/http"
+    "launchpad.net/mgo"
+    "text/template"
+  "runtime"
 )
 
 type User struct {
@@ -21,6 +22,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+    runtime.GOMAXPROCS(8);
 
     session, err := mgo.Dial("localhost")
     if err != nil {
@@ -34,6 +36,6 @@ func main() {
     users = session.DB("nodehello").C("users")
     tpl, _ = template.ParseFiles("index.html")
 
-	http.HandleFunc("/", handler)
-	http.ListenAndServe(":8080", nil)
+    http.HandleFunc("/", handler)
+    http.ListenAndServe(":8080", nil)
 }
