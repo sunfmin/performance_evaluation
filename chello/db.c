@@ -9,7 +9,7 @@ static mongo db[1];
 static char* db_name = NULL;
 
 void db_establish_connection(const char* _db_name) {
-  uint64_t status = mongo_connect(db, "127.0.0.1", 27017);
+  uint64_t status = mongo_client(db, "127.0.0.1", 27017);
   if(status != MONGO_OK) {
     printf("failed to connect mongo\n");
     exit(-1);

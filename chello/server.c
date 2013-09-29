@@ -17,21 +17,21 @@ Buffer render_index(User* users, int users_len) {
   int i;
   Buffer buf = buffer_new(300);
 
-# define append(s, l) buffer_append(&buf, s, l)
-  append(init, strlen(init));
+# define append(s) buffer_append(&buf, s, strlen(s))
+  append(init);
   for(i = 0; i < users_len; i++) {
-    append("<h3>", 4);
+    append("<h3>");
     if(users[i].name){
-      append(users[i].name, users[i].name_len);
+      append(users[i].name);
     }
-    append("</h3>", 5);
-    append("<p>", 3);
+    append("</h3>");
+    append("<p>");
     if(users[i].bio){
-      append(users[i].bio, users[i].bio_len);
+      append(users[i].bio);
     }
-    append("</p>", 4);
+    append("</p>");
   }
-  append(finl, strlen(finl));
+  append(finl);
 # undef append
 
   return buf;
@@ -89,8 +89,11 @@ int main(int argc, char const *argv[]) {
   // action.sa_flags = 0;
   // sigaction (SIGINT, &action, NULL);
 
-  d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, port, NULL, NULL,
-                       &serve, NULL, MHD_OPTION_END);
+  d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port,
+                       NULL, NULL,
+                       &serve, NULL,
+                       MHD_OPTION_THREAD_POOL_SIZE, 8,
+                       MHD_OPTION_END);
   if (d != NULL) {
     pause();
     MHD_stop_daemon(d);
