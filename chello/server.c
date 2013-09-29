@@ -99,6 +99,5 @@ int main(int argc, char const *argv[]) {
     MHD_stop_daemon(d);
   }
 
-  db_close_connection();
   return 0;
 }
