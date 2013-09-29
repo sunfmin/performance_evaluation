@@ -49,7 +49,7 @@ static int serve(void *cls, struct MHD_Connection* http_conn,
     return MHD_YES;
   }
 
-  if (strcmp(method, "GET") == 0) {
+  if (strcmp(method, "GET") == 0 || strcmp(method, "HEAD") == 0) {
     User users[100];
     int len = users_search(users, 100);
     Buffer index = render_index(users, len);
