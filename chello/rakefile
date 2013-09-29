@@ -13,5 +13,5 @@ task :install do
     sh "git clone https://github.com/mongodb/mongo-c-driver"
   end
   cd "mongo-c-driver"
-  sh "git checkout v0.8"
+  sh "git checkout v0.8.1"
 end
