@@ -2,14 +2,17 @@ include FileUtils
 
 desc "build all"
 task :default do
-  files = "server.c users.c mongo-c-driver/src/*.c"
-  sh "gcc #{files} -o server -O3 -Imongo-c-driver/src -lmicrohttpd --std=c99"
+  sh "cc *.c mongo-c-driver/libmongoc.a -o server -O3 -Imongo-c-driver/src -lmicrohttpd --std=c99"
 end
 
 desc "install dependencies"
 task :install do
   sh "brew install libmicrohttpd"
-  sh "git clone https://github.com/mongodb/mongo-c-driver"
+  unless File.exist?('mongo-c-driver')
+    sh "git clone https://github.com/mongodb/mongo-c-driver"
+  end
   cd "mongo-c-driver"
-  sh "git checkout v0.4"
+  sh "git checkout v0.8.1"
+  sh "make clean"
+  sh "make"
 end

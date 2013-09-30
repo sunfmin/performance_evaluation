@@ -1,53 +1,40 @@
+#include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 #include "users.h"
+#include "buffer.h"
 #include <microhttpd.h>
 
-static mongo conn[1];
-
-#define append(s, l) \
-  if(len + l + 1 > cap) {\
-    cap = cap * 2 + l;\
-    buf = realloc(buf, cap);\
-  }\
-  strcpy(buf + len, s);\
-  len += l;
-
-static void render_index(struct MHD_Connection* http_conn, User* users, int users_len) {
+Buffer render_index(User* users, int users_len) {
   static const char* init =
     "<!DOCTYPE html><html><head><title>C Hello</title></head>"
     "<body><h1>Home#index</h1>";
-  static char* finl =
-    "</body></html>\r\n";
+  static const char* finl =
+    "</body></html>";
 
   int i;
-  size_t len = 0;
-  size_t cap = 300;
-  char* buf = (char*)malloc(cap * sizeof(char));
-  struct MHD_Response* resp;
+  Buffer buf = buffer_new(300);
 
-  append(init, strlen(init));
+# define append(s) buffer_append(&buf, s, strlen(s))
+  append(init);
   for(i = 0; i < users_len; i++) {
-    append("<h3>", 4);
+    append("<h3>");
     if(users[i].name){
-      append(users[i].name, users[i].name_len);
+      append(users[i].name);
     }
-    append("</h3>", 5);
-    append("<p>", 3);
+    append("</h3>");
+    append("<p>");
     if(users[i].bio){
-      append(users[i].bio, users[i].bio_len);
+      append(users[i].bio);
     }
-    append("</p>", 4);
+    append("</p>");
   }
-  append(finl, strlen(finl));
+  append(finl);
+# undef append
 
-  resp = MHD_create_response_from_data(len, buf, MHD_NO, MHD_NO);
-  MHD_queue_response(http_conn, MHD_HTTP_OK, resp);
-  MHD_destroy_response(resp);
-  free(buf);
+  return buf;
 }
 
 static int serve(void *cls, struct MHD_Connection* http_conn,
@@ -62,11 +49,17 @@ static int serve(void *cls, struct MHD_Connection* http_conn,
     return MHD_YES;
   }
 
-  if (strcmp(method, "GET") == 0) {
+  if (strcmp(method, "GET") == 0 || strcmp(method, "HEAD") == 0) {
     User users[100];
-    int len = users_search(conn, users, 100);
-    render_index(http_conn, users, len);
+    int len = users_search(users, 100);
+    Buffer index = render_index(users, len);
+    struct MHD_Response* resp;
+
     users_free(users, len);
+    resp = MHD_create_response_from_buffer(index.len, index.str, MHD_RESPMEM_MUST_FREE);
+    MHD_queue_response(http_conn, MHD_HTTP_OK, resp);
+    MHD_destroy_response(resp);
+
     return MHD_YES;
   } else {
     return MHD_NO;
@@ -74,12 +67,11 @@ static int serve(void *cls, struct MHD_Connection* http_conn,
 }
 
 int main(int argc, char const *argv[]) {
-  struct MHD_Daemon* d;
   int port;
-  long long status;
+  struct MHD_Daemon* d;
 
-  if (argc != 2) {
-    printf("usage: ./server <port>\n");
+  if (argc != 3) {
+    printf("usage: ./server <port> <db_name>\n");
     return 1;
   } else {
     port = atoi(argv[1]);
@@ -89,11 +81,7 @@ int main(int argc, char const *argv[]) {
     }
   }
 
-  status = mongo_connect(conn, "127.0.0.1", 27017);
-  if(status != MONGO_OK) {
-    printf("failed to connect mongo\n");
-    exit(-1);
-  }
+  db_establish_connection(argv[2]);
 
   // install int actions
   // action.sa_handler = finalize;
@@ -101,13 +89,15 @@ int main(int argc, char const *argv[]) {
   // action.sa_flags = 0;
   // sigaction (SIGINT, &action, NULL);
 
-  d = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, 8080, NULL, NULL,
-                       &serve, NULL, MHD_OPTION_END);
+  d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port,
+                       NULL, NULL,
+                       &serve, NULL,
+                       MHD_OPTION_THREAD_POOL_SIZE, 8,
+                       MHD_OPTION_END);
   if (d != NULL) {
     pause();
     MHD_stop_daemon(d);
   }
 
-  mongo_destroy(conn);
   return 0;
 }
